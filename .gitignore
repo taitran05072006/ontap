@@ -1,0 +1,17 @@
+# Java / Spring Boot
+**/target/
+
+# React / Node.js
+**/node_modules/
+frontend/dist/
+
+#Enviroment variables
+.env
+**/.env
+
+#IDE
+.idea/
+.vscode/
+
+#macOS
+.DS_Store
