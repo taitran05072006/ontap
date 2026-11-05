@@ -103,10 +103,11 @@ Tailscale and pulls the commit-tagged images into `/opt/ontap`.
 Configure these GitHub repository secrets:
 
 - `TS_OAUTH_CLIENT_ID`
-- `TS_OAUTH_CLIENT_SECRET`
+- `TS_OAUTH_SECRET`
 - `SERVER_HOST` (the VM's Tailscale IP or hostname, not `192.168.64.4`)
 - `SERVER_USER` (`taitran`)
 - `SERVER_SSH_KEY` (the private key whose public key is installed on the VM)
+- `SERVER_SSH_PASSPHRASE` (only if the private key is passphrase-protected)
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
 
