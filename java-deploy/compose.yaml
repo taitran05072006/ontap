@@ -1,0 +1,46 @@
+services:
+  taitran-backend:
+    image: taitran05072006/java-backend:${IMAGE_TAG:latest}
+    container_name: demo-backend
+
+    environment:
+      - DB_HOST=mysql
+      - DB_PORT=3306
+      - DB_NAME=ontap
+      - DB_USERNAME=root
+      - DB_PASSWORD=secret
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+
+  taitran-frontend:
+    image: taitran05072006/java-frontend:${IMAGE_TAG:latest}
+    container_name: demo-frontend
+    ports:
+      - "5173:80"
+    depends_on:
+      - taitran-backend
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: demo-sql
+
+    environment:
+      - MYSQL_DATABASE=ontap
+      - MYSQL_USERNAME=root
+      - MYSQL_PASSWORD=secret
+      - MYSQL_ROOT_PASSWORD=secret
+
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psecret"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+    volumes:
+      - mysql-data:/var/lib/mysql
+
+volumes:
+  mysql-data:

@@ -1,0 +1,3 @@
+ansible-playbook playbooks/deploy.yml \
+  -e app_repo_url=https://github.com/taitran05072006/ontap.git \
+  -e app_db_password='mat-khau-manh'

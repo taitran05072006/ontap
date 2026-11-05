@@ -22,7 +22,6 @@ public class RefreshToken {
     private Instant expired;
     @Builder.Default
     private boolean revoked = false;
-
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;

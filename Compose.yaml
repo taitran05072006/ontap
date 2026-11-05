@@ -1,8 +1,6 @@
 services:
   backend:
-    build:
-      context: ./demo
-      dockerfile: Dockerfile
+    image: ${BACKEND_IMAGE:-taitran05072006/taitran-backend}:${IMAGE_TAG:-latest}
     container_name: taitran-backend
     ports:
       - "8080:8080"
@@ -12,16 +10,14 @@ services:
       - DB_PORT=3306
       - DB_NAME=ontap
       - DB_USERNAME=root
-      - DB_PASSWORD=secret
+      - DB_PASSWORD=${MYSQL_ROOT_PASSWORD}
     depends_on:
       mysql:
         condition: service_healthy
     restart: unless-stopped
 
   frontend:
-    build:
-      context: ./frontend
-      dockerfile: Dockerfile
+    image: ${FRONTEND_IMAGE:-taitran05072006/taitran-frontend}:${IMAGE_TAG:-latest}
     container_name: taitran-frontend
     ports:
       - "5173:80"
@@ -35,15 +31,13 @@ services:
 
     environment:
       - MYSQL_DATABASE=ontap
-      - MYSQL_USERNAME=root
-      - MYSQL_PASSWORD=secret
-      - MYSQL_ROOT_PASSWORD=secret
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD}
     volumes:
       - mysql-data:/var/lib/mysql
 
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psecret"]
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD}"]
       interval: 30s
       timeout: 5s
       retries: 5
