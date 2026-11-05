@@ -1,0 +1,11 @@
+---
+- name: Provision and deploy Ontap
+  hosts: app
+  become: true
+  gather_facts: true
+
+  roles:
+    - common
+    - docker
+    - firewall
+    - deploy

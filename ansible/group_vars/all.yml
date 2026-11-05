@@ -1,0 +1,21 @@
+---
+timezone: Asia/Ho_Chi_Minh
+
+app_dir: /opt/ontap
+app_repo_url: ""
+app_repo_version: main
+backend_image: taitran05072006/taitran-backend
+frontend_image: taitran05072006/taitran-frontend
+image_tag: latest
+
+# Override these values with --extra-vars or an Ansible Vault file.
+app_db_password: change-me
+
+common_packages:
+  - ca-certificates
+  - curl
+  - git
+  - htop
+  - jq
+  - unzip
+  - vim

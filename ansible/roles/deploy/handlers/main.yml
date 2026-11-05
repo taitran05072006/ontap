@@ -1,0 +1,7 @@
+---
+- name: Restart application
+  ansible.builtin.shell:
+    cmd: docker compose --env-file .env -f Compose.yaml pull && docker compose --env-file .env -f Compose.yaml up --detach --remove-orphans
+    chdir: "{{ app_dir }}"
+    executable: /bin/bash
+  changed_when: true

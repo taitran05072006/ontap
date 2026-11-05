@@ -1,0 +1,10 @@
+---
+- name: Provision Ubuntu application host
+  hosts: app
+  become: true
+  gather_facts: true
+
+  roles:
+    - common
+    - docker
+    - firewall

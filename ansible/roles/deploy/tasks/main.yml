@@ -1,0 +1,58 @@
+---
+- name: Require repository URL for deployment
+  ansible.builtin.assert:
+    that:
+      - app_repo_url | length > 0
+    fail_msg: "Set app_repo_url before running deploy.yml."
+  tags:
+    - deploy
+
+- name: Create application directory
+  ansible.builtin.file:
+    path: "{{ app_dir }}"
+    state: directory
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0755"
+  tags:
+    - deploy
+
+- name: Checkout application repository
+  ansible.builtin.git:
+    repo: "{{ app_repo_url }}"
+    dest: "{{ app_dir }}"
+    version: "{{ app_repo_version }}"
+    update: true
+  become_user: "{{ ansible_user }}"
+  notify: Restart application
+  tags:
+    - deploy
+
+- name: Render application environment file
+  ansible.builtin.template:
+    src: env.j2
+    dest: "{{ app_dir }}/.env"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0600"
+  notify: Restart application
+  tags:
+    - deploy
+
+- name: Start application stack
+  ansible.builtin.command:
+    cmd: docker compose --env-file .env -f Compose.yaml pull
+    chdir: "{{ app_dir }}"
+  register: compose_pull
+  changed_when: "'Downloaded' in compose_pull.stdout or 'Pulled' in compose_pull.stdout"
+  tags:
+    - deploy
+
+- name: Start application stack
+  ansible.builtin.command:
+    cmd: docker compose --env-file .env -f Compose.yaml up --detach --remove-orphans
+    chdir: "{{ app_dir }}"
+  register: compose_up
+  changed_when: "'Started' in compose_up.stdout or 'Created' in compose_up.stdout or 'Recreated' in compose_up.stdout"
+  tags:
+    - deploy
