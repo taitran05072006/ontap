@@ -8,3 +8,4 @@
     - common
     - docker
     - firewall
+    - tailscale

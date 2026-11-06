@@ -42,3 +42,6 @@ crash.*.log
 .env
 .env.*
 !.env.example
+
+# Ansible secrets (encrypt this file with ansible-vault)
+ansible/group_vars/vault.yml

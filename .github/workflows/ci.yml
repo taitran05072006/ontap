@@ -133,6 +133,10 @@ jobs:
           script: |
             set -eu
             cd /opt/ontap
+            git fetch --depth=1 origin "${{ github.sha }}"
+            mkdir -p nginx
+            git show FETCH_HEAD:Compose.yaml > Compose.yaml
+            git show FETCH_HEAD:nginx/nginx.conf > nginx/nginx.conf
             export IMAGE_TAG="${{ github.sha }}"
             export BACKEND_PULL_POLICY=missing
             export FRONTEND_PULL_POLICY=missing
