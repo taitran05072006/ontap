@@ -30,6 +30,7 @@ public class User {
     List<Task> tasks = new ArrayList<>();
 
     @Builder.Default
+    @Column(name = "user_role")
     private Role role = Role.USER;
     private String password;
     @Builder.Default
