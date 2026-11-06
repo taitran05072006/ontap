@@ -8,6 +8,8 @@ RUN npm install
 
 COPY . .
 
+# Browser requests must go through the reverse proxy on the same host.
+ENV VITE_API_URL=/api
 RUN npm run build
 
 FROM nginx:stable-alpine
