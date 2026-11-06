@@ -18,7 +18,8 @@ public class CorsConfig {
                 "http://localhost:8085",
                 "http://localhost:8080",
                 "http://localhost:3000",
-                "http://localhost:3001"
+                "http://localhost:3001",
+                "http://100.91.246.49:8085"
         ));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Accept", "Origin"));
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS"));
