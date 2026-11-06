@@ -134,6 +134,8 @@ jobs:
             set -eu
             cd /opt/ontap
             export IMAGE_TAG="${{ github.sha }}"
+            export BACKEND_PULL_POLICY=missing
+            export FRONTEND_PULL_POLICY=missing
             docker compose --env-file .env -f Compose.yaml pull
             docker compose --env-file .env -f Compose.yaml up --detach --remove-orphans
             for attempt in $(seq 1 24); do
