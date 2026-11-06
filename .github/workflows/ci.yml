@@ -142,6 +142,7 @@ jobs:
             export FRONTEND_PULL_POLICY=missing
             docker compose --env-file .env -f Compose.yaml pull --policy always
             docker compose --env-file .env -f Compose.yaml up --detach --remove-orphans --pull never --no-build
+            docker compose --env-file .env -f Compose.yaml up --detach --force-recreate nginx
             for attempt in $(seq 1 24); do
               if curl --fail --silent --show-error http://127.0.0.1:8085/ >/dev/null; then
                 echo "Deployment successful"
