@@ -179,7 +179,7 @@ Configure these GitHub **repository secrets** for publishing Docker images:
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
 
-Configure these secrets in the GitHub **`production` environment** for deploys:
+Configure these secrets in the GitHub **`ontap` environment** for deploys:
 
 - `TAILSCALE_AUTHKEY` (a reusable, ephemeral auth key tagged `tag:ci`; mark it
   pre-approved if device approval is enabled for the tailnet)
