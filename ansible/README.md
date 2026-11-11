@@ -174,16 +174,19 @@ for pull requests. A push to `main` additionally builds multi-architecture
 backend/frontend images, pushes them to Docker Hub, then runs the Ansible
 deployment against both nodes with the commit SHA as the image tag.
 
-Configure these GitHub repository secrets:
+Configure these GitHub **repository secrets** for publishing Docker images:
 
-- `TS_OAUTH_CLIENT_ID`
-- `TS_OAUTH_SECRET`
-- `SERVER_SSH_KEY` (the private key whose public key is installed on the VM)
+- `DOCKERHUB_USERNAME`
+- `DOCKERHUB_TOKEN`
+
+Configure these secrets in the GitHub **`production` environment** for deploys:
+
+- `TAILSCALE_AUTHKEY` (a reusable, ephemeral auth key tagged `tag:ci`; mark it
+  pre-approved if device approval is enabled for the tailnet)
+- `SERVER_SSH_KEY` (the private key whose public key is installed on both VMs)
 - `SERVER_SSH_PASSPHRASE` (only if the private key is passphrase-protected)
 - `ANSIBLE_VAULT_PASSWORD`
 - `APP_DB_PASSWORD`
-- `DOCKERHUB_USERNAME`
-- `DOCKERHUB_TOKEN`
 
 Both VMs must be connected to the same Tailscale network, and each deployment
 user must be able to run Docker without sudo. The inventory connects to
