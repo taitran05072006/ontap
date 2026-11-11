@@ -4,7 +4,12 @@ WORKDIR /app
 
 COPY pom.xml .
 
-RUN mvn dependency:go-offline -B
+RUN for attempt in 1 2 3 4 5; do \
+      mvn -U -B -ntp dependency:go-offline && exit 0; \
+      echo "Maven dependency download failed (attempt ${attempt}/5)"; \
+      if [ "$attempt" -lt 5 ]; then sleep "$((attempt * 5))"; fi; \
+    done; \
+    exit 1
 
 COPY src ./src
 
