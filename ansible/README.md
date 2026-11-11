@@ -180,18 +180,15 @@ Configure these GitHub repository secrets:
 - `TS_OAUTH_SECRET`
 - `SERVER_SSH_KEY` (the private key whose public key is installed on the VM)
 - `SERVER_SSH_PASSPHRASE` (only if the private key is passphrase-protected)
-- `SERVER_HOST_PRIMARY` (Ubuntu 1 Tailscale IP or hostname)
-- `SERVER_HOST_SECONDARY` (Ubuntu 2 Tailscale IP or hostname)
-- `SERVER_USER` (`taitran`)
 - `ANSIBLE_VAULT_PASSWORD`
 - `APP_DB_PASSWORD`
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
 
-Both VMs must be connected to the same Tailscale network and the deployment
-user must be able to run Docker without sudo. The CI job passes `SERVER_HOST_PRIMARY` and `SERVER_HOST_SECONDARY` as
-`primary_host` and `secondary_host`; use the nodes' Tailscale addresses for
-those secrets. Local runs fall back to the LAN addresses in the inventory. The
+Both VMs must be connected to the same Tailscale network, and each deployment
+user must be able to run Docker without sudo. The inventory connects to
+`100.107.7.37` as `taitran` and `100.104.31.2` as `trangiatai`. For local runs,
+you can override `primary_host` and `secondary_host` with LAN addresses. The
 `.env` file and Compose configuration created by Ansible are kept on each VM.
 If a previous failed MySQL initialization left an empty/corrupt volume on a
 new VM, remove only this project's volume before deploying again:
