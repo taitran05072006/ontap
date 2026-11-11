@@ -8,21 +8,22 @@ image_tag: latest
 database_host: "{{ hostvars['ontap-ubuntu-1']['ansible_host'] }}"
 database_port: 3307
 frontend_host: "{{ hostvars['ontap-ubuntu-1']['ansible_host'] }}"
-backend_port: 8080
+backend_port: 8081
 frontend_secondary_port: 5175
+frontend_primary_port: 5176
 
 backend_nodes:
   - name: backend_1
     address: "{{ hostvars['ontap-ubuntu-1']['ansible_host'] }}"
-    port: 8080
+    port: "{{ backend_port }}"
   - name: backend_2
     address: "{{ hostvars['ontap-ubuntu-2']['ansible_host'] }}"
-    port: 8080
+    port: "{{ backend_port }}"
 
 firewall_allowed_tcp_rules:
-  - port: 8080
+  - port: "{{ backend_port }}"
     from_ip: "{{ hostvars['ontap-ubuntu-1']['ansible_host'] }}"
-  - port: 8080
+  - port: "{{ backend_port }}"
     from_ip: "{{ hostvars['ontap-ubuntu-2']['ansible_host'] }}"
   - port: "{{ database_port }}"
     from_ip: "{{ hostvars['ontap-ubuntu-1']['ansible_host'] }}"
