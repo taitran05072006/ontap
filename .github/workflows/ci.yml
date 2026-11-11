@@ -136,7 +136,43 @@ jobs:
           oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
           oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
           tags: tag:ci
-          targets: 100.107.7.37,100.104.31.2
+
+      - name: Check Tailscale and SSH connectivity
+        shell: bash
+        run: |
+          failed=0
+          for host in 100.107.7.37 100.104.31.2; do
+            echo "Checking Tailscale ping to $host"
+            if ping_output=$(sudo tailscale ping --c=3 "$host" 2>&1); then
+              printf '%s\n' "$ping_output"
+            else
+              printf '%s\n' "$ping_output"
+              echo "Tailscale ping failed for $host; checking TCP 22 separately"
+            fi
+
+            echo "Checking SSH TCP port 22 on $host"
+            if python - "$host" <<'PY'
+          import socket
+          import sys
+
+          host = sys.argv[1]
+          try:
+              with socket.create_connection((host, 22), timeout=5):
+                  print(f"TCP {host}:22 is reachable")
+          except OSError as error:
+              print(f"TCP {host}:22 failed: {error}", file=sys.stderr)
+              sys.exit(1)
+          PY
+            then
+              :
+            else
+              failed=1
+            fi
+          done
+
+          if [ "$failed" -ne 0 ]; then
+            exit 1
+          fi
 
       - name: Install Ansible
         run: |
