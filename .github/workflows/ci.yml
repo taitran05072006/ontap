@@ -173,6 +173,16 @@ jobs:
             exit 1
           fi
 
+      - name: Add server host keys to known_hosts
+        shell: bash
+        run: |
+          mkdir -p "$HOME/.ssh"
+          chmod 700 "$HOME/.ssh"
+          for host in 100.107.7.37 100.104.31.2; do
+            ssh-keyscan -T 10 -H "$host" >> "$HOME/.ssh/known_hosts"
+          done
+          chmod 600 "$HOME/.ssh/known_hosts"
+
       - name: Install Ansible
         run: |
           python -m pip install --upgrade pip
