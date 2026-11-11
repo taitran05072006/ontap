@@ -168,6 +168,7 @@ jobs:
       - name: Deploy both backend nodes with Ansible
         env:
           APP_DB_PASSWORD: ${{ secrets.APP_DB_PASSWORD }}
+          ANSIBLE_CONFIG: ansible/ansible.cfg
         run: |
           ansible-playbook ansible/playbooks/deploy.yml \
             -i ansible/inventory/hosts.yml \
