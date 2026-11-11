@@ -2,9 +2,8 @@
 - name: Require repository URL for deployment
   ansible.builtin.assert:
     that:
-      - app_repo_url | length > 0
       - app_db_password | length > 0
-    fail_msg: "Set app_repo_url and a non-empty app_db_password in inventory/group_vars/all/vault.yml before running deploy.yml. On a fresh database, this initializes the MySQL root and application passwords."
+    fail_msg: "Set a non-empty app_db_password before running deploy.yml. On a fresh database, this initializes the MySQL root and application passwords."
   tags:
     - deploy
 
@@ -35,17 +34,6 @@
     enabled: true
     state: started
   when: "'load_balancer' in group_names"
-  tags:
-    - deploy
-
-- name: Checkout application repository
-  ansible.builtin.git:
-    repo: "{{ app_repo_url }}"
-    dest: "{{ app_dir }}"
-    version: "{{ app_repo_version }}"
-    update: true
-    force: true
-  notify: Restart application
   tags:
     - deploy
 

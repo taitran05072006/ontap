@@ -17,7 +17,7 @@
   failed_when: false
 
 - name: Connect this VM to the tailnet
-  ansible.builtin.shell: tailscale up --auth-key="$TS_AUTH_KEY" --hostname={{ tailscale_hostname | quote }}
+  ansible.builtin.shell: tailscale up --auth-key="$TS_AUTH_KEY" --hostname={{ tailscale_hostname | quote }} --tags=tag:ci
   environment:
     TS_AUTH_KEY: "{{ tailscale_auth_key }}"
   when:
