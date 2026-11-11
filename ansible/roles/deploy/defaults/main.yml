@@ -1,5 +1,4 @@
 ---
 app_dir: /opt/ontap
-app_repo_url: ""
+app_repo_url: https://github.com/taitran05072006/ontap.git
 app_repo_version: main
-app_db_password: change-me

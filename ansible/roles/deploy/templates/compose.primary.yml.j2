@@ -1,0 +1,43 @@
+services:
+  backend:
+    image: ${BACKEND_IMAGE}:${IMAGE_TAG}
+    container_name: taitran-backend-1
+    ports:
+      - "{{ backend_nodes[0].address }}:{{ backend_port }}:8080"
+    environment:
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ontap
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    restart: unless-stopped
+  frontend:
+    image: ${FRONTEND_IMAGE}:${IMAGE_TAG}
+    container_name: taitran-frontend
+    ports:
+      - "127.0.0.1:5174:80"
+    restart: unless-stopped
+
+  mysql:
+    image: mysql:8.0
+    container_name: taitran-mysql
+    ports:
+      - "{{ database_host }}:3306:3306"
+    environment:
+      MYSQL_DATABASE: ontap
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$$MYSQL_ROOT_PASSWORD\""]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  mysql-data:

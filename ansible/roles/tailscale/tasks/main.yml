@@ -30,7 +30,7 @@
   ansible.builtin.debug:
     msg: >-
       Tailscale is installed, but this VM is not logged in. Put a Tailscale auth
-      key in the encrypted ansible/group_vars/vault.yml file and rerun this playbook.
+      key in the encrypted inventory/group_vars/all/vault.yml file and rerun this playbook.
   when:
     - tailscale_current_ip.rc != 0
     - tailscale_auth_key | length == 0

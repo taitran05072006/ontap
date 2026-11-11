@@ -1,13 +1,26 @@
-# Ansible provisioning
+# Ansible provisioning and two-node deployment
 
-This directory provisions the Ubuntu VM at `192.168.64.4` with a practical
-baseline for running this project:
+This directory provisions two Ubuntu nodes:
 
 - common packages, timezone and unattended security upgrades
 - Docker Engine and the Docker Compose plugin
-- UFW with SSH and HTTP/HTTPS allowed
+- UFW with SSH, HTTP/HTTPS and restricted private application traffic
 - Tailscale client installation and non-interactive login when a Vault auth key is configured
-- optional deployment of the repository's `Compose.yaml`
+- Nginx reverse proxy and load balancer on Ubuntu 1
+- backend and frontend on Ubuntu 1, backend on Ubuntu 2
+- one MySQL instance on Ubuntu 1, shared by both backends
+
+The default inventory is:
+
+| Node | Address | Services |
+| --- | --- | --- |
+| Ubuntu 1 | `192.168.64.4` | Nginx, backend 1, frontend, MySQL |
+| Ubuntu 2 | `192.168.64.7` | backend 2 |
+
+The database is intentionally a single instance. This is suitable for a lab or
+small deployment, but Ubuntu 1 remains a failure point for both the load
+balancer and database. Use a managed database or a third host before treating
+this as highly available production.
 
 ## Requirements
 
@@ -53,7 +66,7 @@ Do not reuse the GitHub Actions OAuth credentials or commit the auth key.
 From the `ansible` directory on the Mac, create the encrypted variables file:
 
 ```bash
-ansible-vault create group_vars/vault.yml
+ansible-vault create inventory/group_vars/all/vault.yml
 ```
 
 In the editor that opens, enter:
@@ -119,46 +132,73 @@ automatic updates to release the APT/dpkg lock.
 
 ## Provision and deploy the application
 
-The application deployment is intentionally a separate playbook. Set
-`app_repo_url` in `group_vars/all.yml` (or pass it with `-e`) first:
+The application deployment is intentionally a separate playbook. Set a non-empty
+`app_db_password` in the encrypted `inventory/group_vars/all/vault.yml` file, and
+set `app_repo_url` (or pass it with `-e`) first. On a fresh database, this value
+initializes the MySQL root and application passwords. For an existing database,
+it must match the current MySQL password. Keep it unchanged for later deployments.
+
+From the `ansible` directory, edit the Vault file:
 
 ```bash
-ansible-playbook playbooks/deploy.yml --ask-become-pass \
+ansible-vault edit inventory/group_vars/all/vault.yml
+```
+
+Add the following variable. Choose a strong unique value for a fresh database;
+for an existing database, use its current MySQL password:
+
+```yaml
+app_db_password: "YOUR_MYSQL_PASSWORD"
+```
+
+Then run the deployment playbook:
+
+```bash
+ansible-playbook playbooks/deploy.yml --ask-become-pass --ask-vault-pass \
   -e app_repo_url=https://github.com/taitran05072006/ontap.git
 ```
 
-The deployment uses `/opt/ontap` on the VM and runs the root `Compose.yaml`.
-The reverse proxy is available at `http://192.168.64.4:8085`.
+The deployment uses `/opt/ontap` on both nodes. Ansible renders
+`Compose.primary.yaml` and `Compose.secondary.yaml`, then copies the host
+Nginx virtual host to `/etc/nginx/sites-available/ontap` on Ubuntu 1 and
+enables it through `sites-enabled`. Do not edit that file manually; edit
+`ansible/roles/deploy/templates/nginx.ontap.j2` on the Mac and rerun Ansible.
+The load balancer is available at `http://192.168.64.4/`. HTTPS on port 443
+should be added with a real certificate (for example, Certbot or a TLS
+terminating cloud load balancer) before exposing the service publicly.
 
 ## Automatic CI/CD
 
-The workflow in `.github/workflows/ci.yml` runs backend tests and a frontend build for
-pull requests. A push to `main` additionally builds multi-architecture
-backend/frontend images, pushes them to Docker Hub, then connects through
-Tailscale, updates `Compose.yaml` and `nginx/nginx.conf` from that commit on the
-VM, then pulls and runs the commit-tagged images in `/opt/ontap`.
+The workflow in `.github/workflows/ci.yml` runs backend tests and a frontend build
+for pull requests. A push to `main` additionally builds multi-architecture
+backend/frontend images, pushes them to Docker Hub, then runs the Ansible
+deployment against both nodes with the commit SHA as the image tag.
 
 Configure these GitHub repository secrets:
 
 - `TS_OAUTH_CLIENT_ID`
 - `TS_OAUTH_SECRET`
-- `SERVER_HOST` (the VM's Tailscale IP or hostname, not `192.168.64.4`)
-- `SERVER_USER` (`taitran`)
 - `SERVER_SSH_KEY` (the private key whose public key is installed on the VM)
 - `SERVER_SSH_PASSPHRASE` (only if the private key is passphrase-protected)
+- `SERVER_HOST_PRIMARY` (Ubuntu 1 Tailscale IP or hostname)
+- `SERVER_HOST_SECONDARY` (Ubuntu 2 Tailscale IP or hostname)
+- `SERVER_USER` (`taitran`)
+- `ANSIBLE_VAULT_PASSWORD`
+- `APP_DB_PASSWORD`
 - `DOCKERHUB_USERNAME`
 - `DOCKERHUB_TOKEN`
 
-The VM must be connected to the same Tailscale network and the deployment user
-must be able to run Docker without sudo. The `.env` file and Compose configuration created by Ansible are kept on the
-VM. The CI job only pulls images and restarts containers; it does not build
-images on the VM.
+Both VMs must be connected to the same Tailscale network and the deployment
+user must be able to run Docker without sudo. The CI job passes `SERVER_HOST_PRIMARY` and `SERVER_HOST_SECONDARY` as
+`primary_host` and `secondary_host`; use the nodes' Tailscale addresses for
+those secrets. Local runs fall back to the LAN addresses in the inventory. The
+`.env` file and Compose configuration created by Ansible are kept on each VM.
 If a previous failed MySQL initialization left an empty/corrupt volume on a
 new VM, remove only this project's volume before deploying again:
 
 ```bash
 cd /opt/ontap
-docker compose -f Compose.yaml --env-file .env down
+docker compose -f Compose.primary.yaml --env-file .env down
 docker volume rm ontap_mysql-data
 ```
 

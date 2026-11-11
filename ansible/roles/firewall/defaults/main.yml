@@ -3,4 +3,13 @@ firewall_allowed_tcp_ports:
   - 22
   - 80
   - 443
-  - 8085
+
+firewall_allowed_tcp_rules:
+  - port: 8080
+    from_ip: 192.168.64.4
+  - port: 8080
+    from_ip: 192.168.64.7
+  - port: 3306
+    from_ip: 192.168.64.4
+  - port: 3306
+    from_ip: 192.168.64.7

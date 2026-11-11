@@ -3,7 +3,8 @@
   ansible.builtin.assert:
     that:
       - app_repo_url | length > 0
-    fail_msg: "Set app_repo_url before running deploy.yml."
+      - app_db_password | length > 0
+    fail_msg: "Set app_repo_url and a non-empty app_db_password in inventory/group_vars/all/vault.yml before running deploy.yml. On a fresh database, this initializes the MySQL root and application passwords."
   tags:
     - deploy
 
@@ -17,13 +18,33 @@
   tags:
     - deploy
 
+- name: Install Nginx load balancer
+  ansible.builtin.apt:
+    name: nginx
+    state: present
+    update_cache: true
+    cache_valid_time: 3600
+    lock_timeout: 300
+  when: "'load_balancer' in group_names"
+  tags:
+    - deploy
+
+- name: Ensure Nginx is enabled and started
+  ansible.builtin.systemd:
+    name: nginx
+    enabled: true
+    state: started
+  when: "'load_balancer' in group_names"
+  tags:
+    - deploy
+
 - name: Checkout application repository
   ansible.builtin.git:
     repo: "{{ app_repo_url }}"
     dest: "{{ app_dir }}"
     version: "{{ app_repo_version }}"
     update: true
-  become_user: "{{ ansible_user }}"
+    force: true
   notify: Restart application
   tags:
     - deploy
@@ -39,20 +60,98 @@
   tags:
     - deploy
 
-- name: Start application stack
-  ansible.builtin.command:
-    cmd: docker compose --env-file .env -f Compose.yaml pull
-    chdir: "{{ app_dir }}"
-  register: compose_pull
-  changed_when: "'Downloaded' in compose_pull.stdout or 'Pulled' in compose_pull.stdout"
+- name: Render primary Docker Compose file
+  ansible.builtin.template:
+    src: compose.primary.yml.j2
+    dest: "{{ app_dir }}/Compose.primary.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  when: node_role == 'primary'
+  notify: Restart application
   tags:
     - deploy
 
-- name: Start application stack
+- name: Render secondary Docker Compose file
+  ansible.builtin.template:
+    src: compose.secondary.yml.j2
+    dest: "{{ app_dir }}/Compose.secondary.yaml"
+    owner: "{{ ansible_user }}"
+    group: "{{ ansible_user }}"
+    mode: "0644"
+  when: node_role == 'secondary'
+  notify: Restart application
+  tags:
+    - deploy
+
+- name: Render Nginx load balancer site
+  ansible.builtin.template:
+    src: nginx.ontap.j2
+    dest: /etc/nginx/sites-available/ontap
+    owner: root
+    group: root
+    mode: "0644"
+  when: "'load_balancer' in group_names"
+  notify: Reload Nginx
+  tags:
+    - deploy
+
+- name: Enable Nginx load balancer site
+  ansible.builtin.file:
+    src: /etc/nginx/sites-available/ontap
+    dest: /etc/nginx/sites-enabled/ontap
+    state: link
+    force: true
+  when: "'load_balancer' in group_names"
+  notify: Reload Nginx
+  tags:
+    - deploy
+
+- name: Remove default Nginx site
+  ansible.builtin.file:
+    path: /etc/nginx/sites-enabled/default
+    state: absent
+  when: "'load_balancer' in group_names"
+  notify: Reload Nginx
+  tags:
+    - deploy
+
+- name: Pull primary application images
   ansible.builtin.command:
-    cmd: docker compose --env-file .env -f Compose.yaml up --detach --remove-orphans
+    cmd: docker compose --env-file .env -f Compose.primary.yaml pull
+    chdir: "{{ app_dir }}"
+  register: compose_pull
+  changed_when: "'Downloaded' in compose_pull.stdout or 'Pulled' in compose_pull.stdout"
+  when: node_role == 'primary'
+  tags:
+    - deploy
+
+- name: Pull secondary application images
+  ansible.builtin.command:
+    cmd: docker compose --env-file .env -f Compose.secondary.yaml pull
+    chdir: "{{ app_dir }}"
+  register: compose_pull
+  changed_when: "'Downloaded' in compose_pull.stdout or 'Pulled' in compose_pull.stdout"
+  when: node_role == 'secondary'
+  tags:
+    - deploy
+
+- name: Start primary application stack
+  ansible.builtin.command:
+    cmd: docker compose --env-file .env -f Compose.primary.yaml up --detach --remove-orphans
     chdir: "{{ app_dir }}"
   register: compose_up
   changed_when: "'Started' in compose_up.stdout or 'Created' in compose_up.stdout or 'Recreated' in compose_up.stdout"
+  when: node_role == 'primary'
+  tags:
+    - deploy
+
+- name: Start secondary application stack
+  ansible.builtin.command:
+    cmd: docker compose --env-file .env -f Compose.secondary.yaml up --detach --remove-orphans
+    chdir: "{{ app_dir }}"
+  register: compose_up
+  changed_when: "'Started' in compose_up.stdout or 'Created' in compose_up.stdout or 'Recreated' in compose_up.stdout"
+  when: node_role == 'secondary'
   tags:
     - deploy

@@ -1,46 +1,62 @@
 services:
-  taitran-backend:
-    image: taitran05072006/java-backend:${IMAGE_TAG:latest}
-    container_name: demo-backend
-
+  backend:
+    build:
+      context: ./demo
+      dockerfile: Dockerfile
+    image: taitran-backend:local
+    container_name: taitran-backend
+    ports:
+      - "8080:8080"
     environment:
-      - DB_HOST=mysql
-      - DB_PORT=3306
-      - DB_NAME=ontap
-      - DB_USERNAME=root
-      - DB_PASSWORD=secret
+      DB_HOST: mysql
+      DB_PORT: 3306
+      DB_NAME: ontap
+      DB_USERNAME: root
+      DB_PASSWORD: ${MYSQL_ROOT_PASSWORD}
     depends_on:
       mysql:
         condition: service_healthy
     restart: unless-stopped
 
-  taitran-frontend:
-    image: taitran05072006/java-frontend:${IMAGE_TAG:latest}
-    container_name: demo-frontend
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    image: frontend:local
+    container_name: taitran-frontend
     ports:
-      - "5173:80"
+      - "5174:80"
     depends_on:
-      - taitran-backend
+      - backend
     restart: unless-stopped
 
   mysql:
     image: mysql:8.0
-    container_name: demo-sql
-
+    container_name: taitran-mysql
     environment:
-      - MYSQL_DATABASE=ontap
-      - MYSQL_USERNAME=root
-      - MYSQL_PASSWORD=secret
-      - MYSQL_ROOT_PASSWORD=secret
-
+      MYSQL_DATABASE: ontap
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql-data:/var/lib/mysql
     restart: unless-stopped
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-psecret"]
+      test: ["CMD-SHELL", "mysqladmin ping -h localhost -u root -p\"$$MYSQL_ROOT_PASSWORD\""]
       interval: 30s
       timeout: 5s
       retries: 5
+      start_period: 30s
+
+  nginx:
+    image: nginx:stable
+    container_name: taitran-nginx
+    ports:
+      - "8085:80"
     volumes:
-      - mysql-data:/var/lib/mysql
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+    depends_on:
+      - backend
+      - frontend
+    restart: unless-stopped
 
 volumes:
   mysql-data:

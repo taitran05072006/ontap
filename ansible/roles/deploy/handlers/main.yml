@@ -1,7 +1,24 @@
 ---
 - name: Restart application
   ansible.builtin.shell:
-    cmd: docker compose --env-file .env -f Compose.yaml pull && docker compose --env-file .env -f Compose.yaml up --detach --remove-orphans
+    cmd: >-
+      docker compose --env-file .env
+      -f Compose.{{ 'primary' if node_role == 'primary' else 'secondary' }}.yaml
+      pull &&
+      docker compose --env-file .env
+      -f Compose.{{ 'primary' if node_role == 'primary' else 'secondary' }}.yaml
+      up --detach --remove-orphans
     chdir: "{{ app_dir }}"
     executable: /bin/bash
   changed_when: true
+
+- name: Reload Nginx
+  ansible.builtin.command: nginx -t
+  notify: Restart Nginx
+  changed_when: false
+
+- name: Restart Nginx
+  ansible.builtin.systemd:
+    name: nginx
+    state: restarted
+    enabled: true
