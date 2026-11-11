@@ -41,3 +41,9 @@ For CI/CD, configure `ANSIBLE_VAULT_PASSWORD` and `APP_DB_PASSWORD` in
 GitHub Actions secrets in addition to the Docker Hub and SSH secrets. The
 workflow runs the same Ansible deployment against both Ubuntu machines using
 the image tag for the commit SHA.
+
+
+
+DOCKERHUB_TOKEN: dckr_pat_sTuZ74tKK4K2y-7rEBMFH1XC54w
+TS_OAUTH_CLIENT_ID: keW14RD5yF11CNTRL
+TS_OAUTH_SECRET: tskey-client-keW14RD5yF11CNTRL-HgQcAZpGF4HgAgwLGgMu3HURzNvuSoNi
