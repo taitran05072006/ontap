@@ -3,4 +3,4 @@
 tailscale_auth_key: ""
 tailscale_hostname: "{{ inventory_hostname }}"
 tailscale_tags:
-  - tag:ci
+  - tag:deploy

@@ -16,11 +16,11 @@
   changed_when: false
   failed_when: false
 
-- name: Set deployment tag on connected Tailscale VM
+- name: Apply deployment tag to connected Tailscale VM
   ansible.builtin.command:
     argv:
       - tailscale
-      - set
+      - up
       - "--advertise-tags={{ tailscale_tags | join(',') }}"
   when: tailscale_current_ip.rc == 0
   changed_when: false
