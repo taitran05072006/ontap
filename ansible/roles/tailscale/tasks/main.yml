@@ -16,8 +16,20 @@
   changed_when: false
   failed_when: false
 
+- name: Set deployment tag on connected Tailscale VM
+  ansible.builtin.command:
+    argv:
+      - tailscale
+      - set
+      - "--advertise-tags={{ tailscale_tags | join(',') }}"
+  when: tailscale_current_ip.rc == 0
+  changed_when: false
+
 - name: Connect this VM to the tailnet
-  ansible.builtin.shell: tailscale up --auth-key="$TS_AUTH_KEY" --hostname={{ tailscale_hostname | quote }} --tags=tag:ci
+  ansible.builtin.shell: >-
+    tailscale up --auth-key="$TS_AUTH_KEY"
+    --hostname={{ tailscale_hostname | quote }}
+    --advertise-tags={{ tailscale_tags | join(',') | quote }}
   environment:
     TS_AUTH_KEY: "{{ tailscale_auth_key }}"
   when:
