@@ -6,9 +6,10 @@ backend_image: taitran05072006/backend
 frontend_image: taitran05072006/frontend
 image_tag: latest
 database_host: "{{ hostvars['ontap-ubuntu-1']['ansible_host'] }}"
-database_port: 3306
+database_port: 3307
 frontend_host: "{{ hostvars['ontap-ubuntu-1']['ansible_host'] }}"
 backend_port: 8080
+frontend_secondary_port: 5175
 
 backend_nodes:
   - name: backend_1
@@ -23,9 +24,9 @@ firewall_allowed_tcp_rules:
     from_ip: "{{ hostvars['ontap-ubuntu-1']['ansible_host'] }}"
   - port: 8080
     from_ip: "{{ hostvars['ontap-ubuntu-2']['ansible_host'] }}"
-  - port: 3306
+  - port: "{{ database_port }}"
     from_ip: "{{ hostvars['ontap-ubuntu-1']['ansible_host'] }}"
-  - port: 3306
+  - port: "{{ database_port }}"
     from_ip: "{{ hostvars['ontap-ubuntu-2']['ansible_host'] }}"
 
 # Set this in the encrypted inventory/group_vars/all/vault.yml file before deploy.yml.

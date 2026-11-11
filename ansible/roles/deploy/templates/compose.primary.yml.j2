@@ -22,7 +22,7 @@ services:
   mysql:
     image: mysql:8.0
     ports:
-      - "{{ database_host }}:3306:3306"
+      - "{{ database_host }}:{{ database_port }}:3306"
     environment:
       MYSQL_DATABASE: ontap
       MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
