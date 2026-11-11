@@ -154,9 +154,16 @@ jobs:
           chmod 600 "$RUNNER_TEMP/deploy_key"
           printf '%s' "$VAULT_PASSWORD" > "$RUNNER_TEMP/vault_password"
           chmod 600 "$RUNNER_TEMP/vault_password"
+          cat > "$RUNNER_TEMP/ssh_askpass" <<'EOF'
+          #!/bin/sh
+          printf '%s\n' "$SSH_PASSPHRASE"
+          EOF
+          chmod 700 "$RUNNER_TEMP/ssh_askpass"
           eval "$(ssh-agent -s)"
-          SSH_ASKPASS=/bin/false DISPLAY=none \
-            ssh-add "$RUNNER_TEMP/deploy_key" <<< "$SSH_PASSPHRASE"
+          SSH_ASKPASS="$RUNNER_TEMP/ssh_askpass" \
+          SSH_ASKPASS_REQUIRE=force \
+          DISPLAY=:0 \
+            ssh-add "$RUNNER_TEMP/deploy_key" </dev/null
 
       - name: Deploy both backend nodes with Ansible
         env:
@@ -171,4 +178,4 @@ jobs:
             -e "app_db_password=$APP_DB_PASSWORD"
 
       - name: Verify load balancer
-        run: curl --fail --silent --show-error --retry 12 --retry-delay 5 http://${{ secrets.SERVER_HOST_PRIMARY }}/
+        run: curl --fail --silent --show-error --retry 12 --retry-delay 5 http://100.107.7.37/
