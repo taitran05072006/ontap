@@ -214,6 +214,7 @@ jobs:
       - name: Deploy both backend nodes with Ansible
         env:
           APP_DB_PASSWORD: ${{ secrets.APP_DB_PASSWORD }}
+          SERVER_SUDO_PASSWORD_SECONDARY: ${{ secrets.SERVER_SUDO_PASSWORD_SECONDARY }}
           ANSIBLE_CONFIG: ansible/ansible.cfg
         run: |
           ansible-playbook ansible/playbooks/deploy.yml \
