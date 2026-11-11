@@ -44,6 +44,6 @@ the image tag for the commit SHA.
 
 
 
-DOCKERHUB_TOKEN: dckr_pat_sTuZ74tKK4K2y-7rEBMFH1XC54w
-TS_OAUTH_CLIENT_ID: keW14RD5yF11CNTRL
-TS_OAUTH_SECRET: tskey-client-keW14RD5yF11CNTRL-HgQcAZpGF4HgAgwLGgMu3HURzNvuSoNi
+DOCKERHUB_TOKEN: <configure as a GitHub Actions secret>
+TS_OAUTH_CLIENT_ID: <configure in production environment secrets>
+TS_OAUTH_SECRET: <configure in production environment secrets>
