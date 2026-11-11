@@ -144,6 +144,9 @@ jobs:
             echo "Checking Tailscale ping to $host"
             if ping_output=$(sudo tailscale ping --c=3 "$host" 2>&1); then
               printf '%s\n' "$ping_output"
+            elif grep -q 'pong from' <<< "$ping_output"; then
+              printf '%s\n' "$ping_output"
+              echo "Tailscale peer $host is reachable through a relay"
             else
               printf '%s\n' "$ping_output"
               echo "Tailscale ping failed for $host; checking TCP 22 separately"
