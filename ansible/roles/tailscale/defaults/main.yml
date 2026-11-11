@@ -1,6 +1,6 @@
 ---
 # Keep the auth key in an Ansible Vault file, never in this defaults file.
 tailscale_auth_key: ""
-tailscale_hostname: "{{ inventory_hostname }}"
+tailscale_hostname: "{{ ansible_hostname | default(inventory_hostname) }}"
 tailscale_tags:
   - tag:deploy

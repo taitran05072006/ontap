@@ -22,6 +22,7 @@
       - tailscale
       - up
       - "--advertise-tags={{ tailscale_tags | join(',') }}"
+      - "--hostname={{ tailscale_hostname }}"
   when: tailscale_current_ip.rc == 0
   changed_when: false
 
